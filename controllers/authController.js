@@ -212,6 +212,47 @@ export const login = async (req, res) => {
     }
 };
 
+// Google OAuth callback
+export const googleCallback = async (req, res) => {
+    try {
+        const profile = req.user; // Passport attaches profile here
+
+        let user = await User.findOne({ googleId: profile.id });
+
+        if (!user) {
+        user = await User.create({
+            fullname: profile.displayName,
+            email: profile.emails[0].value,
+            googleId: profile.id,
+            isVerified: true, // Google emails are verified
+        });
+        }
+
+        // Issue JWT
+        const token = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+        );
+
+        // Redirect with token to frontend
+        res.redirect(`http://127.0.0.1:5500/the_guide.html?token=${token}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Google authentication failed" });
+    }
+};
+
+// Get current user
+export const me = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 // Logout user
 export const logout = (req, res) => {
     // Since JWT is stateless, logout can be handled on client side by deleting the token
