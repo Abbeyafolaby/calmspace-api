@@ -9,7 +9,7 @@ const app = express();
 // CORS configuration
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['your-production-domain.com'] 
+        ? ['https://calmspace-api.onrender.com', 'https://jtech-code1.github.io/Original_CalmSpace/'] 
         : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5050', 'http://127.0.0.1:5500'],
     credentials: true
 }));
@@ -21,6 +21,14 @@ app.use(express.json({ limit: '10mb' }));
 // Middleware for form submissions
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
+// Health check route
+app.get("/api/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        message: "Calmspace API is healthy 🚀",
+    });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);

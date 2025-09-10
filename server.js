@@ -9,6 +9,6 @@ connectDB();
 // Start server
 app.listen(PORT, () => {
   console.log(
-    `🚀 Calmspace Api server is running on port http://localhost:${PORT}`
+    `🚀 Calmspace Api server is running, view the health route http://localhost:${PORT}/api/health`
   );
 });
