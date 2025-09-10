@@ -220,23 +220,27 @@ export const googleCallback = async (req, res) => {
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-        user = await User.create({
-            fullname: profile.displayName,
-            email: profile.emails[0].value,
-            googleId: profile.id,
-            isVerified: true, // Google emails are verified
-        });
+            user = await User.create({
+                fullname: profile.displayName,
+                email: profile.emails[0].value,
+                googleId: profile.id,
+                isVerified: true, // Google emails are verified
+            });
         }
 
         // Issue JWT
         const token = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
         );
 
-        // Redirect with token to frontend
-        res.redirect(`http://127.0.0.1:5500/the_guide.html?token=${token}`);
+        // Redirect with token to frontend (update these URLs to match your frontend)
+        const frontendURL = process.env.NODE_ENV === 'production' 
+            ? `https://jtech-code1.github.io/Original_CalmSpace/the_guide.html?token=${token}`
+            : `http://127.0.0.1:5500/the_guide.html?token=${token}`;
+        
+        res.redirect(frontendURL);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Google authentication failed" });
