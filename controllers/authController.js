@@ -218,14 +218,17 @@ export const googleCallback = async (req, res) => {
         const profile = req.user; // Passport attaches profile here
 
         let user = await User.findOne({ googleId: profile.id });
+        let isNewUser = false;
 
         if (!user) {
+            // New user - create account
             user = await User.create({
                 fullname: profile.displayName,
                 email: profile.emails[0].value,
                 googleId: profile.id,
                 isVerified: true, // Google emails are verified
             });
+            isNewUser = true;
         }
 
         // Issue JWT
@@ -235,10 +238,19 @@ export const googleCallback = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        // Redirect with token to frontend (update these URLs to match your frontend)
-        const frontendURL = process.env.NODE_ENV === 'production' 
-            ? `https://jtech-code1.github.io/Original_CalmSpace/the_guide.html?token=${token}`
-            : `http://127.0.0.1:5500/the_guide.html?token=${token}`;
+        // Redirect based on user status
+        let frontendURL;
+        if (isNewUser) {
+            // New user - redirect to onboarding
+            frontendURL = process.env.NODE_ENV === 'production' 
+                ? `https://jtech-code1.github.io/Original_CalmSpace/onboarding1.html?token=${token}`
+                : `http://127.0.0.1:5500/onboarding1.html?token=${token}`;
+        } else {
+            // Existing user - redirect to main app
+            frontendURL = process.env.NODE_ENV === 'production' 
+                ? `https://jtech-code1.github.io/Original_CalmSpace/the_guide.html?token=${token}`
+                : `http://127.0.0.1:5500/the_guide.html?token=${token}`;
+        }
         
         res.redirect(frontendURL);
     } catch (err) {
