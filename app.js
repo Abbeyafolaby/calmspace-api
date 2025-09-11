@@ -9,7 +9,7 @@ const app = express();
 // CORS configuration
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://calmspace-api.onrender.com', 'https://jtech-code1.github.io/Original_CalmSpace/'] 
+        ? ['https://calmspace-api.onrender.com', 'https://jtech-code1.github.io/Original_CalmSpace/', 'https://jtech-code1.github.io'] 
         : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5050', 'http://127.0.0.1:5500'],
     credentials: true
 }));
