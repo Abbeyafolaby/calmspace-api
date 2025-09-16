@@ -248,8 +248,8 @@ export const googleCallback = async (req, res) => {
         } else {
             // Existing user - redirect to main app
             frontendURL = process.env.NODE_ENV === 'production' 
-                ? `https://jtech-code1.github.io/Original_CalmSpace/the_guide.html?token=${token}`
-                : `http://127.0.0.1:5500/the_guide.html?token=${token}`;
+                ? `https://jtech-code1.github.io/Original_CalmSpace/dashboard.html?token=${token}`
+                : `http://127.0.0.1:5500/dashboard.html?token=${token}`;
         }
         
         res.redirect(frontendURL);
