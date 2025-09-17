@@ -9,7 +9,7 @@ const app = express();
 // CORS configuration
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://calmspace-api.onrender.com', 'https://jtech-code1.github.io/Original_CalmSpace/', 'https://jtech-code1.github.io', 'https://graceful-daffodil-ceb1f7.netlify.app/'] 
+        ? ['https://calmspace-api.onrender.com', 'https://jtech-code1.github.io/Original_CalmSpace/', 'https://jtech-code1.github.io', 'https://calmspace1.netlify.app/'] 
         : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5050', 'http://127.0.0.1:5500'],
     credentials: true
 }));
