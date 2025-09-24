@@ -215,21 +215,52 @@ export const login = async (req, res) => {
 // Google OAuth callback
 export const googleCallback = async (req, res) => {
     try {
+        console.log('🔍 Google OAuth callback triggered');
+        console.log('👤 Profile received:', req.user);
+        
         const profile = req.user; // Passport attaches profile here
+
+        if (!profile) {
+            console.error('❌ No profile received from Google');
+            return res.redirect(`https://calmspace1.netlify.app/signin.html?error=auth_failed`);
+        }
 
         let user = await User.findOne({ googleId: profile.id });
         let isNewUser = false;
 
+        console.log('🔍 Looking for existing user with Google ID:', profile.id);
+        console.log('👤 Existing user found:', !!user);
+
         if (!user) {
-            // New user - create account
-            user = await User.create({
-                fullname: profile.displayName,
-                email: profile.emails[0].value,
-                googleId: profile.id,
-                isVerified: true, // Google emails are verified
-            });
-            isNewUser = true;
+            // Check if user exists with same email but no Google ID
+            const existingEmailUser = await User.findOne({ email: profile.emails[0].value });
+            
+            if (existingEmailUser) {
+                // Link Google account to existing user
+                console.log('Linking Google account to existing user');
+                existingEmailUser.googleId = profile.id;
+                existingEmailUser.isVerified = true;
+                await existingEmailUser.save();
+                user = existingEmailUser;
+            } else {
+                // New user - create account
+                console.log('Creating new user account');
+                user = await User.create({
+                    fullname: profile.displayName,
+                    email: profile.emails[0].value,
+                    googleId: profile.id,
+                    isVerified: true, // Google emails are verified
+                });
+                isNewUser = true;
+            }
         }
+
+        console.log('✅ User processed:', {
+            id: user._id,
+            email: user.email,
+            isNewUser,
+            hasNickname: !!user.nickname
+        });
 
         // Issue JWT
         const token = jwt.sign(
@@ -238,24 +269,36 @@ export const googleCallback = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        // Redirect based on user status
+        console.log('🔐 JWT token generated');
+
+        // Determine redirect URL based on user status and environment
         let frontendURL;
-        if (isNewUser) {
-            // New user - redirect to onboarding
-            frontendURL = process.env.NODE_ENV === 'production' 
-                ? `https://calmspace1.netlify.app/onboarding1.html?token=${token}`
-                : `http://127.0.0.1:5500/onboarding1.html?token=${token}`;
+        const baseURL = process.env.NODE_ENV === 'production' 
+            ? 'https://calmspace1.netlify.app'
+            : 'http://127.0.0.1:5500';
+
+        if (isNewUser || !user.nickname) {
+            // New user or user without nickname - redirect to onboarding
+            frontendURL = `${baseURL}/onboarding1.html?token=${token}`;
+            console.log('🚀 Redirecting new user to onboarding');
         } else {
-            // Existing user - redirect to main app
-            frontendURL = process.env.NODE_ENV === 'production' 
-                ? `https://calmspace1.netlify.app/dashboard.html?token=${token}`
-                : `http://127.0.0.1:5500/dashboard.html?token=${token}`;
+            // Existing user with complete profile - redirect to dashboard
+            frontendURL = `${baseURL}/dashboard.html?token=${token}`;
+            console.log('🚀 Redirecting existing user to dashboard');
         }
         
+        console.log('🔗 Redirect URL:', frontendURL);
         res.redirect(frontendURL);
+        
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Google authentication failed" });
+        console.error('Google OAuth callback error:', err);
+        
+        // Redirect to signin with error
+        const errorURL = process.env.NODE_ENV === 'production' 
+            ? 'https://calmspace1.netlify.app/signin.html?error=server_error'
+            : 'http://127.0.0.1:5500/signin.html?error=server_error';
+            
+        res.redirect(errorURL);
     }
 };
 
