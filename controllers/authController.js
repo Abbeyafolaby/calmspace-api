@@ -262,10 +262,28 @@ export const googleCallback = async (req, res) => {
 // Get current user
 export const me = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password");
-        res.json(user);
+        console.log(' /me endpoint called, user ID:', req.user.id);
+        
+        const user = await User.findById(req.user.id).select("-password -otp -otpExpiry");
+        
+        if (!user) {
+            console.log('❌ User not found in database');
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        console.log('✅ User found:', { id: user._id, email: user.email, nickname: user.nickname });
+        
+        res.json({
+            id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            nickname: user.nickname,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt
+        });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error('💥 /me endpoint error:', err);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 };
 
