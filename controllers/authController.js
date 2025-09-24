@@ -157,7 +157,7 @@ export const completeProfile = async (req, res) => {
             msg: "Onboarding complete",
                 user: {
                 id: user._id,
-                name: user.name,
+                name: user.fullname,
                 email: user.email,
                 nickname: user.nickname
             },
@@ -201,7 +201,7 @@ export const login = async (req, res) => {
             msg: "Login successful",
             user: {
                 id: user._id,
-                name: user.name,
+                name: user.fullname,
                 email: user.email,
                 nickname: user.nickname
             },
