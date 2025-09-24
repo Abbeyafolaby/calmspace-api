@@ -155,15 +155,15 @@ export const completeProfile = async (req, res) => {
 
         res.json({ 
             msg: "Onboarding complete",
-                user: {
+            user: {
                 id: user._id,
-                name: user.fullname,
+                fullname: user.fullname,
                 email: user.email,
                 nickname: user.nickname
             },
         });
     } catch (error) {
-        
+        res.status(500).json({ error: error.message }); 
     }
 };
 
@@ -189,7 +189,7 @@ export const login = async (req, res) => {
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ msg: "Your Password isncorrect" });
+        if (!isMatch) return res.status(400).json({ msg: "Your Password is incorrect" }); 
 
         const token = jwt.sign(
             { id: user._id }, 
@@ -201,7 +201,7 @@ export const login = async (req, res) => {
             msg: "Login successful",
             user: {
                 id: user._id,
-                name: user.fullname,
+                fullname: user.fullname,
                 email: user.email,
                 nickname: user.nickname
             },
