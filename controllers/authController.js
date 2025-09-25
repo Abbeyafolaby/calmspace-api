@@ -212,24 +212,30 @@ export const login = async (req, res) => {
     }
 };
 
-// Google OAuth callback
+// Google OAuth callback - LOCAL DEVELOPMENT FRIENDLY
 export const googleCallback = async (req, res) => {
     try {
-        console.log('🔍 Google OAuth callback triggered');
+        console.log('Google OAuth callback triggered');
+        console.log('Request headers:', {
+            host: req.headers.host,
+            origin: req.headers.origin,
+            referer: req.headers.referer
+        });
         console.log('👤 Profile received:', req.user);
         
         const profile = req.user; // Passport attaches profile here
 
         if (!profile) {
             console.error('❌ No profile received from Google');
-            return res.redirect(`https://calmspace1.netlify.app/signin.html?error=auth_failed`);
+            const errorURL = getRedirectURL('/signin.html?error=auth_failed');
+            return res.redirect(errorURL);
         }
 
         let user = await User.findOne({ googleId: profile.id });
         let isNewUser = false;
 
-        console.log('🔍 Looking for existing user with Google ID:', profile.id);
-        console.log('👤 Existing user found:', !!user);
+        console.log('Looking for existing user with Google ID:', profile.id);
+        console.log('Existing user found:', !!user);
 
         if (!user) {
             // Check if user exists with same email but no Google ID
@@ -262,45 +268,56 @@ export const googleCallback = async (req, res) => {
             hasNickname: !!user.nickname
         });
 
-        // Issue JWT
+        // Issue JWT with longer expiry for Google OAuth users
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            { expiresIn: "30d" } // Extended expiry for OAuth users
         );
 
-        console.log('🔐 JWT token generated');
+        console.log('JWT token generated');
 
         // Determine redirect URL based on user status and environment
-        let frontendURL;
-        const baseURL = process.env.NODE_ENV === 'production' 
-            ? 'https://calmspace1.netlify.app'
-            : 'http://127.0.0.1:5500';
-
-        if (isNewUser || !user.nickname) {
-            // New user or user without nickname - redirect to onboarding
-            frontendURL = `${baseURL}/onboarding1.html?token=${token}`;
-            console.log('🚀 Redirecting new user to onboarding');
-        } else {
-            // Existing user with complete profile - redirect to dashboard
-            frontendURL = `${baseURL}/dashboard.html?token=${token}`;
-            console.log('🚀 Redirecting existing user to dashboard');
-        }
+        const redirectPath = (isNewUser || !user.nickname) 
+            ? `/onboarding1.html?token=${token}` 
+            : `/dashboard.html?token=${token}`;
+            
+        const frontendURL = getRedirectURL(redirectPath);
         
-        console.log('🔗 Redirect URL:', frontendURL);
+        console.log('🚀 Redirecting to:', frontendURL);
         res.redirect(frontendURL);
         
     } catch (err) {
         console.error('Google OAuth callback error:', err);
         
         // Redirect to signin with error
-        const errorURL = process.env.NODE_ENV === 'production' 
-            ? 'https://calmspace1.netlify.app/signin.html?error=server_error'
-            : 'http://127.0.0.1:5500/signin.html?error=server_error';
-            
+        const errorURL = getRedirectURL('/signin.html?error=server_error');
         res.redirect(errorURL);
     }
 };
+
+// Helper function to get correct redirect URL 
+function getRedirectURL(path) {
+    // Multiple ways to detect local development
+    const isLocal = process.env.NODE_ENV === 'development' || 
+                    process.env.NODE_ENV !== 'production' ||
+                   !process.env.RENDER ||  // Render.com sets this
+                   process.env.PORT === '5000'; // Common local port
+    
+    // You can also check for local IP/hostname if needed
+    const baseURL = isLocal 
+        ? 'http://127.0.0.1:5500'  // local frontend URL
+        : 'https://calmspace1.netlify.app';
+    
+    console.log('🌍 Environment variables:');
+    console.log('  - NODE_ENV:', process.env.NODE_ENV);
+    console.log('  - PORT:', process.env.PORT);
+    console.log('  - RENDER:', process.env.RENDER);
+    console.log('🌍 Detected environment:', isLocal ? 'Local Development' : 'Production');
+    console.log('🔗 Base URL:', baseURL);
+    
+    return `${baseURL}${path}`;
+}
 
 // Get current user
 export const me = async (req, res) => {
