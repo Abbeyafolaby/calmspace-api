@@ -307,7 +307,7 @@ function getRedirectURL(path) {
     // You can also check for local IP/hostname if needed
     const baseURL = isLocal 
         ? 'http://127.0.0.1:5500'  // local frontend URL
-        : 'https://calmspace-web.netlify.app';
+        : 'https://calmspace1.netlify.app';
     
     console.log('🌍 Environment variables:');
     console.log('  - NODE_ENV:', process.env.NODE_ENV);
