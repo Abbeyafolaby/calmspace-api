@@ -13,7 +13,7 @@ app.use(cors({
             "https://jtech-code1.github.io",
             "https://jtech-code1.github.io/Original_CalmSpace",
             "https://calmspace1.netlify.app",
-            "https://calmspace-web.netlify.app"
+            "https://calmspace1.vercel.app"
         ]
         : [
             "http://localhost:3000",
